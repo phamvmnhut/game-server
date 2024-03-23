@@ -15,6 +15,7 @@ import route from "./api/index.js";
 
 import AppError from "./utils/appError.js";
 import globalErrorHandler from "./utils/errorHandler.js";
+import { Code } from "./utils/statusCode.js";
 
 const app = express();
 
@@ -70,7 +71,7 @@ app.use("/api/v1/", route);
 // app.use('/api/v1/api-docs', docsRouter);
 
 app.all("*", (request, response, next) => {
-  next(new AppError(`Can't find ${request.originalUrl} on this server`, 404));
+  next(new AppError(Code.NOT_FOUND.code));
 });
 
 app.use(globalErrorHandler);
