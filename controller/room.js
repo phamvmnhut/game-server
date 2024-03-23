@@ -34,7 +34,7 @@ export const joinRoom = catchAsync(async (request, response, next) => {
   if (roomExisted.status !== 1) {
     throw new AppError(Code.ROOM_STATUS_INVALID.code)
   }
-  
+
   const joinedRoom = await prisma.roomUser.findFirst({
     where: {
       userId: parseInt(request.body.userId),
@@ -75,6 +75,18 @@ export const startGame = catchAsync(async (request, response, next) => {
 
   const userIdList = roomUserInSocket.sort(() => 0.5 - Math.random());
 
+  const userList = await prisma.roomUser.findMany({
+    where: {
+      roomId: roomExisted.id,
+      userId: {
+        in: userIdList
+      }
+    },
+    include: {
+      user: true,
+    }
+  });
+
   let gameInitData = {};
 
   if (gameType == 1) {
@@ -83,6 +95,7 @@ export const startGame = catchAsync(async (request, response, next) => {
     gameInitData.nextTurn = userIdList[1];
     gameInitData.endTurnTime = currentTime + nextGameRoundInSeconds;
     gameInitData.history = [];
+    gameInitData.currentRound = 1;
   }
 
   const updatedStatusRoom = await prisma.room.update({
@@ -104,8 +117,36 @@ export const startGame = catchAsync(async (request, response, next) => {
   });
 
   app_socket.to(room).emit("play", {
-    ...newGame
+    ...newGame,
+    userList: userList,
   });
+
+  setTimeout(async () => {
+    const currentGame = await prisma.roomGame.findUnique({
+      where: {
+        id: newGame.id
+      }
+    });
+    if (!currentGame) return;
+
+    if (currentGame.dataJson.currentRound == 1) {
+      // time out
+
+      app_socket.to(room).emit("ended", {
+        id: ""
+      });
+
+      const updatedStatus2Room = await prisma.room.update({
+        where: {
+          id: roomExisted.id
+        }, data: {
+          status: 1,
+        }
+      });
+    } else {
+      return;
+    }
+  }, nextGameRoundInSeconds);
 
   return sendResponse(newGame, response);
 });

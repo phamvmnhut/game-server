@@ -22,7 +22,7 @@ export const submitGame = catchAsync(async (request, response, next) => {
 
   const { gameType, userIdList, dataJson, roomId } = gameExisted;
   const userList = userIdList.split(",").map((e) => parseInt(e, 10));
-  const { currentTurn, currentValue, nextTurn, endTurnTime, history } = dataJson;
+  const { currentTurn, currentValue, nextTurn, endTurnTime, history, currentRound } = dataJson;
   const room = "room_" + roomId;
 
   const currentTime = new Date().getTime() / 1000;
@@ -63,7 +63,8 @@ export const submitGame = catchAsync(async (request, response, next) => {
         endTurnTime: currentTime + nextGameRoundInSeconds,
         currentTurn: nextTurn,
         currentValue: formattedWord,
-        nextTurn: getNextValue(userList, nextTurn)
+        nextTurn: getNextValue(userList, nextTurn),
+        currentRound: currentRound + 1,
       }
     }
   })
@@ -71,5 +72,33 @@ export const submitGame = catchAsync(async (request, response, next) => {
   app_socket.to(room).emit(actionEnum.NEW_SUBMIT, {
     ...updated
   });
+
+  setTimeout(async () => {
+    const currentGame = await prisma.roomGame.findUnique({
+      where: {
+        id: parseInt(roomGameId, 10)
+      }
+    });
+    if (!currentGame) return;
+
+    if (currentGame.dataJson.currentRound == currentRound + 1) {
+      // time out
+
+      app_socket.to(room).emit("ended", {
+        winner: ""
+      });
+
+      const updatedStatus2Room = await prisma.room.update({
+        where: {
+          id: currentGame.roomId
+        }, data: {
+          status: 1,
+        }
+      });
+    } else {
+      return;
+    }
+  }, nextGameRoundInSeconds);
+
   return sendResponse("oke", response);
 });
