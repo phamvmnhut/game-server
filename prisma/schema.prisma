@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id        Int        @id @default(autoincrement())
+    createdAt DateTime   @default(now()) @map("created_at")
+    username  String
+    RoomUser  RoomUser[]
+
+    @@map("user")
+}
+
+model Room {
+    id        Int        @id @default(autoincrement())
+    createdAt DateTime   @default(now()) @map("created_at")
+    updatedAt DateTime   @updatedAt @map("updated_at")
+    name      String
+    RoomUser  RoomUser[]
+    status    Int        @default(1) // 1: waiting; 2: playing; 3: ended;
+    RoomGame  RoomGame[]
+
+    @@map("room")
+}
+
+model RoomUser {
+    id     Int  @id @default(autoincrement())
+    user   User @relation(fields: [userId], references: [id])
+    userId Int  @map("user_id")
+    role   Int  @default(1)
+    room   Room @relation(fields: [roomId], references: [id])
+    roomId Int  @map("room_id")
+
+    @@map("room_user")
+}
+
+model RoomGame {
+    id         Int    @id @default(autoincrement())
+    room       Room   @relation(fields: [roomId], references: [id])
+    roomId     Int    @map("room_id")
+    gameType   Int    @map("game_type") // 1: word_continue, 2: number_guest
+    startTime  Int    @map("start_time")
+    userIdList String @map("user_id_list")
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+    dataJson  Json     @map("data_json")
+
+    @@map("room_game")
+}
