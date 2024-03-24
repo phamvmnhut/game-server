@@ -111,7 +111,7 @@ export const submitGame = catchAsync(async (request, response, next) => {
       }
     case 2:
       {
-        const { number } = request.body;
+        const { number, guestFor } = request.body;
         let newJsonData = { ...dataJson };
         // round 1 : init data
         if (currentRound == 1) {
@@ -133,6 +133,7 @@ export const submitGame = catchAsync(async (request, response, next) => {
               userId: userId,
               value: number.toString(),
               time: currentTime,
+              guestFor: guestFor,
             }
           ]
           newJsonData.endTurnTime = currentTime + nextGameRoundInSeconds;
