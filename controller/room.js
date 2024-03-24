@@ -4,6 +4,7 @@ import sendResponse from "../utils/sendResponse.js";
 import { PrismaClient } from "@prisma/client";
 import { Code } from "../utils/statusCode.js";
 import { nextGameRoundInSeconds } from "../config/app.js";
+import { gameAutoEndRound } from "../background/game-auto-end-round.js";
 
 const prisma = new PrismaClient();
 
@@ -125,32 +126,8 @@ export const startGame = catchAsync(async (request, response, next) => {
     userList: userIdList.map((e) => userList.find((u) => u.userId == e)),
   });
 
-  setTimeout(async () => {
-    const currentGame = await prisma.roomGame.findUnique({
-      where: {
-        id: newGame.id
-      }
-    });
-    if (!currentGame) return;
-
-    if (currentGame.dataJson.currentRound == 1) {
-      // time out
-
-      app_socket.to(room).emit("ended", {
-        id: ""
-      });
-
-      const updatedStatus2Room = await prisma.room.update({
-        where: {
-          id: roomExisted.id
-        }, data: {
-          status: 1,
-        }
-      });
-    } else {
-      return;
-    }
-  }, nextGameRoundInSeconds);
+  // job auto end round
+  gameAutoEndRound(nextGameRoundInSeconds);
 
   return sendResponse(newGame, response);
 });
