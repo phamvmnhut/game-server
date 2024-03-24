@@ -19,6 +19,10 @@ const CodeData = {
     code: 403,
     message: "Permission deny",
   },
+  MANY_REQUEST: {
+    code: 421,
+    message: "Too many requests, please try again later!"
+  },
   WORD_INVALID: {
     code: 1001,
     message: "Word submitted invalid",

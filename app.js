@@ -31,7 +31,7 @@ if (process.env.NODE_ENV !== "development") {
     max: 70,
     windowMs: 15 * 60 * 1000,
     handler(request, response, next) {
-      next(new AppError("Too many requests, please try again later!", 421));
+      next(new AppError(Code.MANY_REQUEST.code));
     },
   });
 
