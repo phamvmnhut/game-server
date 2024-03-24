@@ -89,13 +89,17 @@ export const startGame = catchAsync(async (request, response, next) => {
 
   let gameInitData = {};
 
-  if (gameType == 1) {
-    gameInitData.currentTurn = userIdList[0];
-    gameInitData.currentValue = "";
-    gameInitData.nextTurn = userIdList[1];
-    gameInitData.endTurnTime = currentTime + nextGameRoundInSeconds;
-    gameInitData.history = [];
-    gameInitData.currentRound = 1;
+  gameInitData.currentTurn = userIdList[0];
+  gameInitData.currentValue = "";
+  gameInitData.nextTurn = userIdList[1];
+  gameInitData.endTurnTime = currentTime + nextGameRoundInSeconds;
+  gameInitData.history = [];
+  gameInitData.currentRound = 1;
+
+  switch (gameType) {
+    case 2:
+      gameInitData.numberGuest = userIdList.map(() => "0000");
+      break;
   }
 
   const updatedStatusRoom = await prisma.room.update({
@@ -118,7 +122,7 @@ export const startGame = catchAsync(async (request, response, next) => {
 
   app_socket.to(room).emit("play", {
     ...newGame,
-    userList: userList,
+    userList: userIdList.map((e) => userList.find((u) => u.userId == e)),
   });
 
   setTimeout(async () => {
