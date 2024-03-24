@@ -103,13 +103,13 @@ export const startGame = catchAsync(async (request, response, next) => {
       break;
   }
 
-  const updatedStatusRoom = await prisma.room.update({
-    where: {
-      id: roomExisted.id
-    }, data: {
-      status: 2,
-    }
-  })
+  // const updatedStatusRoom = await prisma.room.update({
+  //   where: {
+  //     id: roomExisted.id
+  //   }, data: {
+  //     status: 2,
+  //   }
+  // })
 
   const newGame = await prisma.roomGame.create({
     data: {
