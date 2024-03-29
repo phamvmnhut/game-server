@@ -4,7 +4,6 @@ import { join } from "path";
 import morgan from "morgan";
 import cors from "cors";
 // const qs = require('qs');
-import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import xss from "xss-clean";
 import hpp from "hpp";
@@ -24,19 +23,6 @@ app.use(urlencoded({ extended: false }));
 // Set security HTTP headers
 app.use(helmet());
 app.use(cors());
-
-// Limit requests from same API
-if (process.env.NODE_ENV !== "development") {
-  const limiter = rateLimit({
-    max: 70,
-    windowMs: 15 * 60 * 1000,
-    handler(request, response, next) {
-      next(new AppError(Code.MANY_REQUEST.code));
-    },
-  });
-
-  app.use("/api/", limiter);
-}
 
 // build-in middleware to get req.body ~ req.query from body
 app.use(json({ limit: "20kb" }));
